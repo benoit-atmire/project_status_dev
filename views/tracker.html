@@ -62,7 +62,7 @@
     });
 
 
-    t.render(function(t){
+    t.render(function(){
         return Promise.all([getUnmappedTrackers(), t.get('card', 'shared', 'project')])
             .then(function (data) {
                 var trackers = data[0];
