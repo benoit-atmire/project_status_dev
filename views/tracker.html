@@ -52,7 +52,7 @@
             var card_data = {
                 tracker : tracker_id
             }
-            return Promise.all([t.set('card', 'shared', 'sla', card_data), mapTracker(pid, tracker)])
+            return Promise.all([t.set('card', 'shared', 'sla', card_data), mapTracker(pid, tracker_id)])
                 .then(function(){
                     //console.log(carddata);
                     t.closePopup();
