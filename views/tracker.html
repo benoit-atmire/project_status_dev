@@ -10,7 +10,7 @@
     <fieldset id="fields">
         <label for="tracker">Tracker: </label><input type="text" id="tracker" list="trackerlist"/>
         <datalist id="trackerlist"></datalist>
-
+        <input type="hidden" id="pid"/>
     </fieldset>
     <button id="submit" type="submit" class="mod-primary">Add</button>
     <p id="error" style="color: red;"></p>
@@ -26,6 +26,7 @@
 
 
         var tracker = document.getElementById("tracker").value;
+        var pid = document.getElementById('pid').value;
 
         if (tracker == "") {
             document.getElementById("error").value = "Please fill in a tracker";
@@ -51,35 +52,39 @@
             var card_data = {
                 tracker : tracker_id
             }
-            return t.set('card', 'shared', 'sla', card_data)
+            return Promise.all([t.set('card', 'shared', 'sla', card_data), mapTracker(pid, tracker)])
                 .then(function(){
+                    //console.log(carddata);
                     t.closePopup();
+
                 });
         }
     });
 
 
-    t.render(function(){
-        return getTrackers()
-            .then(function (trackers) {
+    t.render(function(t){
+        return Promise.all([getUnmappedTrackers(), t.get('card', 'shared', 'project')])
+            .then(function (data) {
+                var trackers = data[0];
+                var project_data = data[1];
                 console.log(trackers);
                 var dataList = document.getElementById('trackerlist');
 
-                for (var tracker in trackers) {
+                for (var i = 0 ; i < trackers.length ; i++) {
                     var option = document.createElement('option');
-                    option.value = trackers[tracker].project_name + " (" + trackers[tracker].company_name + ")";
-                    option.setAttribute("trackername", tracker);
+                    option.value = trackers[i].name;
+                    option.setAttribute("trackername", trackers[i].link);
                     dataList.appendChild(option);
                 }
+                document.getElementById('pid').value = project_data.pid.value;
 
                 t.sizeTo('#addtracker').done();
             });
     });
 
-    function getTrackers(){
-
+    function getUnmappedTrackers(){
         return new Promise(function (resolve, reject){
-            var url = 'https://script.google.com/macros/s/AKfycbwAd7QSzVkRIxni-pv30PDjJYH-Zzp2X7PPuvJBSST3p3LmJs3B/exec';
+            var url = 'https://reports.atmi.re/slas/unmapped';
             var xmlhttp = new XMLHttpRequest();
             xmlhttp.open("GET", url);
             xmlhttp.onload = function () {
@@ -89,6 +94,23 @@
                 }
             };
             xmlhttp.send();
+        });
+    }
+
+    function mapTracker(pid, tracker){
+        console.log("Mapping tracker - Function to be written");
+        return new Promise(function (resolve, reject){
+            var url = 'https://reports.atmi.re/slas/' + tracker + '/project';
+            var xmlhttp = new XMLHttpRequest();
+            xmlhttp.open("POST", url);
+            xmlhttp.onload = function () {
+                if (this.status >= 200 && this.status < 300) {
+                    var trackers = JSON.parse(xmlhttp.responseText);
+                    resolve(trackers);
+                }
+            };
+            xmlhttp.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+            xmlhttp.send("pid=" + pid);
         });
     }
 

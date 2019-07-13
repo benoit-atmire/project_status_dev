@@ -8,9 +8,7 @@
 
 <form id="settings">
     <fieldset id="fields">
-        <label for="username">W2P username: </label><input type="text" id="username" />
-
-        <label for="password">W2P password: </label><input type="password" id="password" />
+        <label for="apitoken">API token: </label><input type="text" id="apitoken" />
 
         <label for="ttoken">Trello token: </label><input type="text" id="ttoken" />
 
@@ -32,13 +30,12 @@
         document.getElementById("sendform").value = "Please wait..."
         event.preventDefault();
 
-        var username = document.getElementById("username").value;
-        var password = document.getElementById("password").value;
+        var apitoken = document.getElementById("apitoken").value;
         var ttoken = document.getElementById("ttoken").value;
         var tkey = document.getElementById("tkey").value;
         var hasLabels = (document.getElementById("labels").value == "yes");
 
-        if ((username == "") || (password == "") || (ttoken == "") || (tkey == "")) {
+        if ((apitoken == "") || (ttoken == "") || (tkey == "")) {
             document.getElementById("error").value = "All fields are mandatory";
             return false;
         }
@@ -46,10 +43,9 @@
         else {
             document.getElementById("error").value = "";
             var settings = {
-                "username": username,
-                "password": password,
-                "ttoken": ttoken,
-                "tkey": tkey
+                "apitoken" : apitoken,
+                "ttoken" : ttoken,
+                "tkey" : tkey
             };
         }
 
@@ -74,14 +70,13 @@
     t.render(function(){
       return t.getAll()
       .then(function(data){
-          var settings;
-        var hasSettings = (data.board.private.settings && data.board.private.settings != '' && data.board.private.settings.username && data.board.private.settings.password && data.board.private.settings.ttoken && data.board.private.settings.tkey);
-        var hasLabels = (data.board.shared.labels && data.board.shared.labels != '');
+        var settings;
+        var hasSettings = (data.board && data.board.private && data.board.private.settings && data.board.private.settings != '' && data.board.private.settings.apitoken && data.board.private.settings.ttoken && data.board.private.settings.tkey);
+        var hasLabels = (data.board && data.board.shared && data.board.shared.labels && data.board.shared.labels != '');
 
         if (hasSettings) {
             settings = data.board.private.settings;
-            document.getElementById("username").value = settings.username;
-            document.getElementById("password").value = settings.password;
+            document.getElementById("apitoken").value = settings.apitoken;
             document.getElementById("ttoken").value = settings.ttoken;
             document.getElementById("tkey").value = settings.tkey;
         }

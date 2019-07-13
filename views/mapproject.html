@@ -48,11 +48,12 @@
             }
             //console.log("Context: " + t.getContext().card);
 
-            var card_data = {
-                id : t.getContext().card,
-                pid : pid
-            }
-            return t.set('card', 'private', card_data)
+            var project_data = {
+                "pid" : { "value" : pid},
+                "week" : {"value" : "2000-01-01"}
+            };
+
+            return t.set('card', 'shared', 'project', project_data)
                 .then(function(){
                     t.closePopup();
                 });
@@ -63,7 +64,7 @@
     t.render(function(){
         return t.get('board', 'private', 'settings', '')
             .then(function(settings) {
-                return getProjects(settings.username, settings.password);
+                return getProjects(settings.apitoken);
             })
             .then(function (projects) {
                 //console.log(projects);
@@ -72,7 +73,7 @@
                 for (var i in projects) {
                     var option = document.createElement('option');
                     option.value = projects[i].project_name + " (" + projects[i].company_name + ")";
-                    option.setAttribute("pid", projects[i].project_id);
+                    option.setAttribute("pid", projects[i].pid);
                     dataList.appendChild(option);
                 }
 
@@ -81,27 +82,19 @@
     });
 
 
-    function getProjects(username, password){
+    function getProjects(apitoken){
         return new Promise(function (resolve, reject) {
             var xmlhttp = new XMLHttpRequest();
             var projects = {};
-            xmlhttp.open("GET", "https://atmire.com/w2p-api/reports?username=" + username + "&password=" + password + "&report_type=projects_overview");
+            xmlhttp.open("GET", 'https://reports.atmi.re/projects');
             xmlhttp.onload = function () {
                 if (this.status >= 200 && this.status < 300) {
-                    var response = JSON.parse(xmlhttp.responseText);
-                    var p = response.projects;
-                    for (var i in p) {projects[p[i].project_id] = p[i]}
+                    var projects = JSON.parse(xmlhttp.responseText);
                     resolve(projects);
 
-                } /*else {
-                console.log(xmlhttp.statusText);
-                reject(new Error(xmlhttp.statusText));
-            }*/
+                } 
             };
-            /*xmlhttp.onerror = function () {
-                console.log("network error");
-                reject(new Error("Something went wrong with the query (network error)"));
-            }*/
+            xmlhttp.setRequestHeader('Authorization', 'Bearer ' + apitoken);
             xmlhttp.send();
         });
     }
